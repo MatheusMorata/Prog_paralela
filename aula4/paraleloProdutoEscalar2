@@ -5,20 +5,23 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <omp.h>
+#include <sys/time.h>
 
 void main(){
-    double a[99999], b[99999];
-    int n = 99999;
+    double a[100000], b[100000];
+    int n = 100000;
     int i;
     double soma_compartilhada = 0;
+    struct timeval start, end;
 
     for(i = 0; i<n; i++){
         a[i] = i * 0.5;
         b[i] = i * 2;
     }
 
-    double inicio = omp_get_wtime();
 
+    // Captura o tempo de início
+    gettimeofday(&start, NULL);
     #pragma omp parallel
     {
         double soma_local = 0;
@@ -32,10 +35,14 @@ void main(){
         }
     }
         
-    
-        
-    double resultado = omp_get_wtime() - inicio; 
+     // Captura o tempo de fim
+    gettimeofday(&end, NULL);
+
+    // Calcula a diferença em microsegundos
+    long seconds = end.tv_sec - start.tv_sec;
+    long microseconds = end.tv_usec - start.tv_usec;
+    double elapsed = seconds + microseconds * 1e-6;
 
     printf("Soma = %.2f\n",soma_compartilhada);
-    printf("Tempo = %.8f\n",resultado);
+    printf("Tempo de execução: %.8f segundos\n", elapsed);
 }
