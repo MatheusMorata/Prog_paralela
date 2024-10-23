@@ -1,0 +1,41 @@
+/* 
+    Cálculo do produto escalar em paralelo, utilizando trecho crítico
+*/
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <omp.h>
+
+void main(){
+    double a[99999], b[99999];
+    int n = 99999;
+    int i;
+    double soma_compartilhada = 0;
+
+    for(i = 0; i<n; i++){
+        a[i] = i * 0.5;
+        b[i] = i * 2;
+    }
+
+    double inicio = omp_get_wtime();
+
+    #pragma omp parallel
+    {
+        double soma_local = 0;
+        #pragma omp for nowait 
+            for(i = 1; i<n; i++){
+                soma_local += a[i] * b[i];
+            }
+        #pragma omp critical
+        {
+            soma_compartilhada += soma_local;
+        }
+    }
+        
+    
+        
+    double resultado = omp_get_wtime() - inicio; 
+
+    printf("Soma = %.2f\n",soma_compartilhada);
+    printf("Tempo = %.8f\n",resultado);
+}
