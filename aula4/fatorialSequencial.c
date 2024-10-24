@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <omp.h>
 
-int main(){
+void main(){
     int fatorial = 1;
     int n = 10;
 
@@ -16,5 +16,5 @@ int main(){
 
     printf("Fatorial de %d = %d\n",n,fatorial);
     printf("Tempo de execucao: %.8f segundos\n", sequencial_time);
-    return 0;
+
 }
