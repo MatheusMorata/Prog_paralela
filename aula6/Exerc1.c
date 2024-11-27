@@ -4,6 +4,7 @@
 
 int main(int argc, char* argv[]) {
     int rank, size, value, received_value;
+    MPI_Status stat;
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -24,7 +25,7 @@ int main(int argc, char* argv[]) {
 
     // Cada processo i recebe o valor do processo i-1, soma seu rank e envia para o processo i+1
     if (rank != 0) {
-        MPI_Recv(&received_value, 1, MPI_INT, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&received_value, 1, MPI_INT, rank - 1, 0, MPI_COMM_WORLD, &stat);
         value = received_value + rank;
     }
     if (rank != size - 1) {
@@ -42,7 +43,7 @@ int main(int argc, char* argv[]) {
             MPI_Abort(MPI_COMM_WORLD, 1);
         }
         for (int i = 0; i < size; i++) {
-            MPI_Recv(&received_value, 1, MPI_INT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(&received_value, 1, MPI_INT, i, 0, MPI_COMM_WORLD, &stat);
             fprintf(output, "Identificação = %d valor %d\n", i, received_value);
         }
         fclose(output);
