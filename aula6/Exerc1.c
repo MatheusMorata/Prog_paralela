@@ -1,58 +1,69 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <mpi.h>
 
-int main(int argc, char *argv[]) {
-    int rank, size;
-    int value;
-    
-    // Inicializa o MPI
-    MPI_Init(&argc, &argv);
+#define MAX_FILENAME_LENGTH 100
 
-    // Obtém o número de processos e o identificador do processo
+int main(int argc, char *argv[]) {
+    int rank, size, data, received_data;
+    char filename[MAX_FILENAME_LENGTH];
+    FILE *output_file;
+
+    MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
     if (rank == 0) {
-        // Processo 0 lê o valor fornecido pelo usuário
-        printf("Digite o valor inicial: ");
-        scanf("%d", &value);
+        // Processo 0 lê o nome do arquivo e o valor inicial da linha de comando
+        if (argc != 3) {
+            fprintf(stderr, "Uso: %s <nome-do-arquivo> <valor-inicial>\n", argv[0]);
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
+
+        // Nome do arquivo com extensão .txt
+        snprintf(filename, MAX_FILENAME_LENGTH, "%s.txt", argv[1]);
+        data = atoi(argv[2]);
     }
 
-    // Distribui o valor inicial para todos os processos
-    MPI_Bcast(&value, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
-    // Cada processo adiciona seu identificador ao valor
-    value += rank;
-
-    // O processo 0 coleta os resultados de todos os processos
+    // Transmissão do dado do processo 0 para os demais
     if (rank == 0) {
-        // Abre o arquivo para escrita
-        FILE *output_file = fopen("output.txt", "w");
-        if (output_file == NULL) {
-            perror("Não foi possível abrir o arquivo para escrita");
-            MPI_Finalize();
-            return 1;
-        }
-
-        // Escreve o valor calculado pelo processo 0
-        fprintf(output_file, "Identificação = %d valor %d\n", rank, value);
-
-        // Agora, o processo 0 coleta os valores dos outros processos
-        int temp_value;
-        for (int i = 1; i < size; i++) {
-            MPI_Recv(&temp_value, 1, MPI_INT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            fprintf(output_file, "Identificação = %d valor %d\n", i, temp_value);
-        }
-
-        // Fecha o arquivo
-        fclose(output_file);
+        // Envia o dado para o próximo processo
+        MPI_Send(&data, 1, MPI_INT, rank + 1, 0, MPI_COMM_WORLD);
     } else {
-        // Outros processos enviam seus resultados de volta para o processo 0
-        MPI_Send(&value, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+        // Recebe o dado do processo anterior
+        MPI_Recv(&received_data, 1, MPI_INT, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        
+        // Atualiza o valor do dado
+        data = received_data + rank;
+        
+        // Envia o dado ao próximo processo, se não for o último
+        if (rank < size - 1) {
+            MPI_Send(&data, 1, MPI_INT, rank + 1, 0, MPI_COMM_WORLD);
+        }
     }
 
-    // Finaliza o MPI
+    // Todos os processos enviam o dado calculado de volta ao processo 0
+    MPI_Send(&data, 1, MPI_INT, 0, 1, MPI_COMM_WORLD);
+
+    if (rank == 0) {
+        // Processo 0 coleta e imprime os valores de todos os processos
+        output_file = fopen(filename, "w");
+        if (!output_file) {
+            fprintf(stderr, "Erro ao abrir o arquivo de saída.\n");
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
+
+        fprintf(output_file, "Identificação = %d valor %d\n", rank, data);
+
+        for (int i = 1; i < size; i++) {
+            MPI_Recv(&received_data, 1, MPI_INT, i, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            fprintf(output_file, "Identificação = %d valor %d\n", i, received_data);
+        }
+
+        fclose(output_file);
+    }
+
     MPI_Finalize();
     return 0;
 }
