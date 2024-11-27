@@ -8,14 +8,16 @@ int main(int argc, char* argv[]) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    // O processo zero lê o valor inicial da linha de comando
-    if (rank == 0) {
-        if (argc != 2) {
-            printf("Usage: %s <initial_value>\n", argv[0]);
-            MPI_Abort(MPI_COMM_WORLD, 1);
+    // Verificar se o nome do arquivo e o valor inicial foram fornecidos
+    if (argc != 3) {
+        if (rank == 0) {
+            printf("Usage: %s <output_filename> <initial_value>\n", argv[0]);
         }
-        value = atoi(argv[1]);
+        MPI_Abort(MPI_COMM_WORLD, 1);
     }
+
+    const char* filename = argv[1];
+    value = atoi(argv[2]);
 
     // Broadcast do valor inicial do processo zero para todos os outros processos
     MPI_Bcast(&value, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -34,7 +36,7 @@ int main(int argc, char* argv[]) {
 
     // O processo zero recebe e imprime os valores calculados de todos os processos
     if (rank == 0) {
-        FILE* output = fopen("output.txt", "w");
+        FILE* output = fopen(filename, "w");
         if (output == NULL) {
             printf("Error opening file!\n");
             MPI_Abort(MPI_COMM_WORLD, 1);
