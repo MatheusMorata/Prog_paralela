@@ -87,6 +87,15 @@ int main (int argc, char *argv[]) {
     int start_row = rank * rows_per_proc;
     int end_row = (rank == nprocs - 1) ? size : start_row + rows_per_proc;
 
+    if (rank < resto) {
+        rows_per_proc += 1;
+        start_row = rank * rows_per_proc;
+        end_row = start_row + rows_per_proc - 1;
+    } else {
+        start_row = rank * rows_per_proc + resto;
+        end_row = start_row + rows_per_proc - 1;
+    }
+    
     double start_time, end_time;
     MPI_Status stat;
 
