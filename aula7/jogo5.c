@@ -91,10 +91,11 @@ int main(int argc, char **argv) {
         tmp = next;
         next = prev;
         prev = tmp;
-        MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, &prev[0][0], rows_per_proc * size, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
+        MPI_Allgather(MPI_IN_PLACE, rows_per_proc * size, MPI_UNSIGNED_CHAR, &prev[0][0], rows_per_proc * size, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
     }
 
     double end_time = MPI_Wtime();
+
     if (rank == 0) {
         printf("Tempo de execução da função play: %f segundos\n", end_time - start_time);
         print(prev, size);
@@ -102,6 +103,7 @@ int main(int argc, char **argv) {
 
     free_board(prev, size);
     free_board(next, size);
+
     MPI_Finalize();
     return 0;
 }
