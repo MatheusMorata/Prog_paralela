@@ -137,7 +137,7 @@ int main (int argc, char **argv) {
 	/*
 	rank < resto 
 		tamanho = tamanho + 1
-		inicio = tamanho * rank 
+		inicio = tamanho * i 
 		fim = inicio + tamanho - 1
 	else
 		inicio = rank * tam + resto 
@@ -151,36 +151,21 @@ int main (int argc, char **argv) {
 		for (i = 0; i < num_procs; ++i) {
 			if (i < resto) {
 				tamanho = tam+1;
-				inicio = tamanho * rank;
-				fim = (inicio + tamanho) -1;
-				printf("tam: %d ini: %d fim: %d\n", tamanho, inicio, fim);
+				inicio = tamanho * i;
+				fim = (inicio + tamanho) - 1;
 				(pt+i)->tam = tamanho;
 				(pt+i)->ini = inicio;
 				(pt+i)->fim = fim;
-			}
-			else {
+			} else {
 				tamanho = tam;
-				inicio = tamanho * rank + resto;
+				inicio = tamanho * i + resto;
 				fim = inicio + tamanho -1;
-				printf("tam: %d ini: %d fim: %d\n", tamanho, inicio, fim);
 				(pt+i)->tam = tamanho;
 				(pt+i)->ini = inicio;
 				(pt+i)->fim = fim;
 			}
-			printf(" i:%d tam: %d ini: %d fim: %d \n", i, (pt+i)->tam, (pt+i)->ini, (pt+i)->fim);
 		}
 	}
-
-/*	
-  if( rank == 0) {
-	printf(" ----------------SO O ZERO\n");
-    for (i = 0; i < num_procs; ++i) {
-		printf (" i:%d tam: %d ini: %d fim: %d \n", i, (pt+i)->tam, (pt+i)->ini, (pt+i)->fim);
-	}
-	
-  }
-
-  */
 
 	#ifdef DEBUG
 	printf("Initial \n");
